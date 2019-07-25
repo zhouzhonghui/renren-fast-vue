@@ -2,63 +2,50 @@
   <div class="mod-config">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.paramKey" placeholder="参数名" clearable></el-input>
+        <el-input v-model="dataForm.key" placeholder="参数名" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+        <el-button v-if="isAuth('sino:sinocompany:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+        <el-button v-if="isAuth('sino:sinocompany:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
       </el-form-item>
     </el-form>
     <el-table
-        :data="dataList"
-        border
-        v-loading="dataListLoading"
-        @selection-change="selectionChangeHandle"
-        style="width: 100%;">
-        <el-table-column
-          type="selection"
-          header-align="center"
-          align="center"
-          width="50">
-        </el-table-column>
-        <el-table-column
-          prop="id"
-          header-align="center"
-          align="center"
-          width="80"
-          label="ID">
-        </el-table-column>
-        <el-table-column
-          prop="paramKey"
-          header-align="center"
-          align="center"
-          label="参数名">
-        </el-table-column>
-        <el-table-column
-          prop="paramValue"
-          header-align="center"
-          align="center"
-          label="参数值">
-        </el-table-column>
-        <el-table-column
-          prop="remark"
-          header-align="center"
-          align="center"
-          label="备注">
-        </el-table-column>
-        <el-table-column
-          fixed="right"
-          header-align="center"
-          align="center"
-          width="150"
-          label="操作">
-          <template slot-scope="scope">
-            <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
-            <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      :data="dataList"
+      border
+      v-loading="dataListLoading"
+      @selection-change="selectionChangeHandle"
+      style="width: 100%;">
+      <el-table-column
+        type="selection"
+        header-align="center"
+        align="center"
+        width="50">
+      </el-table-column>
+      <el-table-column
+        prop="id"
+        header-align="center"
+        align="center"
+        label="公司主键id">
+      </el-table-column>
+      <el-table-column
+        prop="name"
+        header-align="center"
+        align="center"
+        label="公司名称">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        header-align="center"
+        align="center"
+        width="150"
+        label="操作">
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
+          <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
     <el-pagination
       @size-change="sizeChangeHandle"
       @current-change="currentChangeHandle"
@@ -74,13 +61,12 @@
 </template>
 
 <script>
-  import AddOrUpdate from './config-add-or-update'
-
+  import AddOrUpdate from './sinocompany-add-or-update'
   export default {
     data () {
       return {
         dataForm: {
-          paramKey: ''
+          key: ''
         },
         dataList: [],
         pageIndex: 1,
@@ -102,15 +88,16 @@
       getDataList () {
         this.dataListLoading = true
         this.$http({
-          url: this.$http.adornUrl('/sys/config/list'),
+          url: this.$http.adornUrl('/sino/sinocompany/list'),
           method: 'get',
           params: this.$http.adornParams({
             'page': this.pageIndex,
             'limit': this.pageSize,
-            'paramKey': this.dataForm.paramKey
+            'key': this.dataForm.key
           })
         }).then(({data}) => {
           if (data && data.code === 0) {
+            console.log(data.page)
             this.dataList = data.page.list
             this.totalPage = data.page.totalCount
           } else {
@@ -153,7 +140,7 @@
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/sys/config/delete'),
+            url: this.$http.adornUrl('/sino/sinocompany/delete'),
             method: 'post',
             data: this.$http.adornData(ids, false)
           }).then(({data}) => {
@@ -170,7 +157,6 @@
               this.$message.error(data.msg)
             }
           })
-        }).catch(() => {
         })
       }
     }

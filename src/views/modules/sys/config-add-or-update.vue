@@ -4,6 +4,11 @@
     :close-on-click-modal="false"
     :visible.sync="visible">
     <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="80px">
+        <el-form-item label="租户" prop="tenantid">
+          <el-select v-model="dataForm.tenant" size="medium"  placeholder="请选择租户">
+            <el-option v-for="item in dataForm.depass" :key="item.value" :label="item.name" :value="item.name"></el-option>
+          </el-select>
+        </el-form-item>
       <el-form-item label="参数名" prop="paramKey">
         <el-input v-model="dataForm.paramKey" placeholder="参数名"></el-input>
       </el-form-item>
@@ -30,9 +35,14 @@
           id: 0,
           paramKey: '',
           paramValue: '',
-          remark: ''
+          remark: '',
+          tenant: '',
+          depass: []
         },
         dataRule: {
+          tenantid: [
+            {required: true, message: '租户不能为空', trigger: 'blur'}
+          ],
           paramKey: [
             { required: true, message: '参数名不能为空', trigger: 'blur' }
           ],
@@ -41,6 +51,9 @@
           ]
         }
       }
+    },
+    mounted () {
+      this.getTenant()
     },
     methods: {
       init (id) {
@@ -63,6 +76,17 @@
           }
         })
       },
+      getTenant () {
+        this.$http({
+          url: this.$http.adornUrl('/tenantinfo/sinotenantinfo/tenantinfolist'),
+          method: 'get'
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            console.log(data)
+            this.dataForm.depass = data.page
+          }
+        })
+      },
       // 表单提交
       dataFormSubmit () {
         this.$refs['dataForm'].validate((valid) => {
@@ -74,6 +98,7 @@
                 'id': this.dataForm.id || undefined,
                 'paramKey': this.dataForm.paramKey,
                 'paramValue': this.dataForm.paramValue,
+                'tenantId': this.dataForm.tenant,
                 'remark': this.dataForm.remark
               })
             }).then(({data}) => {
